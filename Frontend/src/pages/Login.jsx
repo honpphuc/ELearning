@@ -1,54 +1,15 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom"; // 👈 Thêm dòng này
 
-const Login = () => {
+const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [message, setMessage] = useState({ type: "", text: "" });
-  const navigate = useNavigate(); // 👈 Dùng để chuyển trang
 
-  const togglePassword = () => setShowPassword(!showPassword);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage({ type: "", text: "" });
-
-    try {
-      // Gửi request đến backend
-      const res = await axios.post("/api/auth/login", formData);
-
-      // ✅ Nếu thành công
-      setMessage({ type: "success", text: "Đăng nhập thành công!" });
-      console.log("Login success:", res.data);
-
-      // Lưu token vào localStorage
-      // ✅ Lưu token & user vào localStorage
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      // 🔔 Báo cho Layout biết user vừa đăng nhập để cập nhật menu ngay
-      window.dispatchEvent(new Event("userLogin"));
-
-      // ✅ Điều hướng sang trang home sau 1 giây
-      setTimeout(() => {
-        navigate("/home");
-      }, 1000);
-    } catch (err) {
-      console.error("Login error:", err.response?.data);
-      setMessage({
-        type: "error",
-        text: err.response?.data?.error || "Đăng nhập thất bại!",
-      });
-    }
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
     <div className="login-page">
+      {/* Main Login Section */}
       <section className="login-main">
         <div className="login-container">
           <div className="login-form-wrapper">
@@ -58,20 +19,26 @@ const Login = () => {
                 <p>Nhập thông tin tài khoản của bạn</p>
               </div>
 
-              {message.text && (
-                <div
-                  className={`alert ${
-                    message.type === "error" ? "alert-error" : "alert-success"
-                  }`}
-                >
-                  {message.text}
+              {errorMessage && (
+                <div className="alert alert-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errorMessage}
+                </div>
+              )}
+              {successMessage && (
+                <div className="alert alert-success">
+                  <i className="fas fa-check-circle"></i>
+                  {successMessage}
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} noValidate>
+              <form method="POST" action="/login" noValidate>
+                <input type="hidden" name="_csrf" value={csrfToken} />
+
                 <div className="form-group">
                   <label htmlFor="email">
-                    <i className="fas fa-envelope"></i> Email
+                    <i className="fas fa-envelope"></i>
+                    Email
                   </label>
                   <input
                     id="email"
@@ -80,14 +47,13 @@ const Login = () => {
                     required
                     autoComplete="email"
                     placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={handleChange}
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="password">
-                    <i className="fas fa-lock"></i> Mật khẩu
+                    <i className="fas fa-lock"></i>
+                    Mật khẩu
                   </label>
                   <div className="password-wrap">
                     <input
@@ -97,8 +63,6 @@ const Login = () => {
                       required
                       autoComplete="current-password"
                       placeholder="••••••••"
-                      value={formData.password}
-                      onChange={handleChange}
                     />
                     <button
                       type="button"
@@ -126,7 +90,8 @@ const Login = () => {
                 </div>
 
                 <button className="btn btn-primary btn-login" type="submit">
-                  <i className="fas fa-sign-in-alt"></i> Đăng nhập
+                  <i className="fas fa-sign-in-alt"></i>
+                  Đăng nhập
                 </button>
               </form>
 

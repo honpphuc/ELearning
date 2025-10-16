@@ -53,16 +53,7 @@ export default function App() {
     <Router>
       <Layout>
         <Routes>
-          {/* Trang chủ */}
           <Route path="/" element={<Home popularCourses={sampleCourses} />} />
-
-          {/* Trang home sau khi đăng nhập */}
-          <Route
-            path="/home"
-            element={<Home popularCourses={sampleCourses} />}
-          />
-
-          {/* Các trang khác */}
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route

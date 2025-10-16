@@ -10,7 +10,7 @@ const Payment = ({ course }) => {
     setIsProcessing(true);
 
     try {
-      const res = await fetch("/api/payment/create", {
+      const res = await fetch("http://localhost:5000/create_payment_url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

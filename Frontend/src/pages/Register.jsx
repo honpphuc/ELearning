@@ -1,22 +1,21 @@
 import React, { useState } from "react";
-import axios from "axios";
 
-const Register = () => {
+const Register = ({
+  csrfToken = "",
+  errorMessage = "",
+  successMessage = "",
+}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState("");
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
-  const [message, setMessage] = useState({ type: "", text: "" });
 
-  const togglePassword = () => setShowPassword(!showPassword);
-  const toggleConfirmPassword = () =>
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPassword = () => {
     setShowConfirmPassword(!showConfirmPassword);
+  };
 
   const checkPasswordStrength = (password) => {
     if (!password) {
@@ -32,26 +31,8 @@ const Register = () => {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (e.target.name === "password") checkPasswordStrength(e.target.value);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage({ type: "", text: "" });
-
-    try {
-      const res = await axios.post("/api/auth/register", formData);
-      setMessage({ type: "success", text: "Đăng ký thành công!" });
-      console.log("Register success:", res.data);
-    } catch (err) {
-      console.error(err);
-      setMessage({
-        type: "error",
-        text: err.response?.data?.message || "Đăng ký thất bại!",
-      });
-    }
+  const handlePasswordChange = (e) => {
+    checkPasswordStrength(e.target.value);
   };
 
   return (
@@ -62,22 +43,21 @@ const Register = () => {
           <div className="register-form-wrapper">
             <div className="register-form-card">
               <h2>Đăng ký tài khoản</h2>
-
-              {message.text && (
-                <div
-                  className={`alert ${
-                    message.type === "error" ? "alert-error" : "alert-success"
-                  }`}
-                >
-                  {message.text}
-                </div>
+              {errorMessage && (
+                <div className="alert alert-error">{errorMessage}</div>
+              )}
+              {successMessage && (
+                <div className="alert alert-success">{successMessage}</div>
               )}
 
               <form
-                onSubmit={handleSubmit}
-                className="register-form"
+                method="POST"
+                action="/register"
                 noValidate
+                className="register-form"
               >
+                <input type="hidden" name="_csrf" value={csrfToken} />
+
                 <div className="form-row-2">
                   <div className="form-group">
                     <label htmlFor="firstName">
@@ -89,8 +69,6 @@ const Register = () => {
                       name="firstName"
                       placeholder="Nguyễn"
                       required
-                      value={formData.firstName}
-                      onChange={handleChange}
                     />
                   </div>
                   <div className="form-group">
@@ -103,8 +81,6 @@ const Register = () => {
                       name="lastName"
                       placeholder="Văn A"
                       required
-                      value={formData.lastName}
-                      onChange={handleChange}
                     />
                   </div>
                 </div>
@@ -120,8 +96,6 @@ const Register = () => {
                     placeholder="example@email.com"
                     required
                     autoComplete="email"
-                    value={formData.email}
-                    onChange={handleChange}
                   />
                 </div>
 
@@ -137,8 +111,7 @@ const Register = () => {
                       placeholder="Tối thiểu 8 ký tự"
                       required
                       autoComplete="new-password"
-                      value={formData.password}
-                      onChange={handleChange}
+                      onChange={handlePasswordChange}
                     />
                     <button
                       type="button"
@@ -150,10 +123,10 @@ const Register = () => {
                         className={`fa-solid ${
                           showPassword ? "fa-eye-slash" : "fa-eye"
                         }`}
+                        aria-hidden="true"
                       ></i>
                     </button>
                   </div>
-
                   {passwordStrength && (
                     <div className="password-strength">
                       <div
@@ -183,8 +156,7 @@ const Register = () => {
                       name="password_confirmation"
                       placeholder="Nhập lại mật khẩu"
                       required
-                      value={formData.password_confirmation}
-                      onChange={handleChange}
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
@@ -196,6 +168,7 @@ const Register = () => {
                         className={`fa-solid ${
                           showConfirmPassword ? "fa-eye-slash" : "fa-eye"
                         }`}
+                        aria-hidden="true"
                       ></i>
                     </button>
                   </div>

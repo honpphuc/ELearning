@@ -1,45 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
-const Layout = ({ children }) => {
-  const [user, setUser] = useState(null);
+const Layout = ({ children, user = null }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // 🔹 Hàm đọc user từ localStorage
-  const loadUser = () => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-    } else {
-      setUser(null);
-    }
-  };
-
-  useEffect(() => {
-    // Khi Layout mount lần đầu → load user
-    loadUser();
-
-    // 🔹 Khi tab khác hoặc component khác cập nhật localStorage → tự cập nhật user
-    const handleStorageChange = () => loadUser();
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
-  // 🔹 Khi user đăng nhập thành công ở Login.jsx → thông báo cho Layout
-  useEffect(() => {
-    const handleUserLogin = () => loadUser();
-    window.addEventListener("userLogin", handleUserLogin);
-    return () => window.removeEventListener("userLogin", handleUserLogin);
-  }, []);
-
-  const toggleUserMenu = () => setUserMenuOpen(!userMenuOpen);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    window.location.href = "/login";
+  const toggleUserMenu = () => {
+    setUserMenuOpen(!userMenuOpen);
   };
 
   return (
@@ -50,7 +15,6 @@ const Layout = ({ children }) => {
             <i className="fas fa-graduation-cap"></i>
             <span>EduLearn</span>
           </div>
-
           <ul className="nav-links">
             <li>
               <a href="/">Trang chủ</a>
@@ -68,7 +32,6 @@ const Layout = ({ children }) => {
               <a href="/contact">Liên hệ</a>
             </li>
           </ul>
-
           <div className="auth-buttons">
             {user ? (
               <div className={`user-menu ${userMenuOpen ? "open" : ""}`}>
@@ -86,16 +49,11 @@ const Layout = ({ children }) => {
                   {user.role === "admin" && (
                     <a href="/admin/dashboard">Quản trị</a>
                   )}
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLogout();
-                    }}
-                    className="logout-btn"
-                  >
-                    Đăng xuất
-                  </a>
+                  <form method="POST" action="/logout">
+                    <button type="submit" className="logout-btn">
+                      Đăng xuất
+                    </button>
+                  </form>
                 </div>
               </div>
             ) : (
@@ -119,6 +77,32 @@ const Layout = ({ children }) => {
           <div className="footer-section">
             <h3>EduLearn</h3>
             <p>Nền tảng học trực tuyến hàng đầu Việt Nam</p>
+            <div className="social-links">
+              <a href="#">
+                <i className="fab fa-facebook"></i>
+              </a>
+              <a href="#">
+                <i className="fab fa-twitter"></i>
+              </a>
+              <a href="#">
+                <i className="fab fa-instagram"></i>
+              </a>
+              <a href="#">
+                <i className="fab fa-linkedin"></i>
+              </a>
+            </div>
+          </div>
+          <div className="footer-section">
+            <h3>Liên kết</h3>
+            <a href="/about">Giới thiệu</a>
+            <a href="/courses">Khóa học</a>
+            <a href="/contact">Liên hệ</a>
+          </div>
+          <div className="footer-section">
+            <h3>Hỗ trợ</h3>
+            <a href="#">Trung tâm trợ giúp</a>
+            <a href="#">Điều khoản dịch vụ</a>
+            <a href="#">Chính sách bảo mật</a>
           </div>
           <div className="footer-section">
             <h3>Liên hệ</h3>
