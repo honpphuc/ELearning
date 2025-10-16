@@ -9,6 +9,7 @@ export { default as MyCourses } from "./MyCourses";
 export { default as Payment } from "./Payment";
 export { default as Profile } from "./Profile";
 export { default as Settings } from "./Settings";
+export { default as LearnCourse } from "./LearnCourse";
 
 // Auth pages
 export { default as Login } from "./Login";

@@ -1,58 +1,178 @@
-import React from "react";
-import { useParams } from "react-router-dom";
-import Payment from "./Payment";
-
-// Dữ liệu mẫu khóa học (nên lấy từ API hoặc context)
-const sampleCourses = [
-  {
-    id: 1,
-    icon: "fas fa-laptop-code",
-    category: "Công nghệ",
-    title: "React cho người mới",
-    description: "Bắt đầu hành trình học React từ cơ bản tới nâng cao.",
-    duration: "12 giờ",
-    students: 1240,
-    rating: 4.8,
-    price: 199000,
-  },
-  {
-    id: 2,
-    icon: "fas fa-briefcase",
-    category: "Kinh doanh",
-    title: "Quản trị doanh nghiệp",
-    description: "Kỹ năng quản trị và lãnh đạo hiệu quả.",
-    duration: "8 giờ",
-    students: 980,
-    rating: 4.6,
-    price: 149000,
-  },
-  {
-    id: 3,
-    icon: "fas fa-paint-brush",
-    category: "Sáng tạo",
-    title: "Thiết kế UI/UX",
-    description: "Thiết kế giao diện người dùng chuyên nghiệp.",
-    duration: "10 giờ",
-    students: 860,
-    rating: 4.7,
-    price: 179000,
-  },
-];
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 const PaymentPage = () => {
   const { id } = useParams();
-  const course = sampleCourses.find((c) => String(c.id) === String(id));
+  const navigate = useNavigate();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
+  const [error, setError] = useState("");
 
-  if (!course) {
+  useEffect(() => {
+    fetchCourse();
+  }, [id]);
+
+  const fetchCourse = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`http://localhost:5000/api/courses/${id}`);
+      if (!res.ok) throw new Error("Không tìm thấy khóa học");
+      const data = await res.json();
+      setCourse(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Vui lòng đăng nhập để đăng ký khóa học!");
+        navigate("/login");
+        return;
+      }
+
+      setEnrolling(true);
+      const res = await fetch("http://localhost:5000/api/enrollments/enroll", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ courseId: id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Đăng ký thất bại");
+      }
+
+      alert("🎉 Đăng ký khóa học thành công!");
+      navigate("/my-courses");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="payment-error">
-        <i className="fas fa-exclamation-circle"></i>
-        <p>Không tìm thấy khóa học!</p>
-      </div>
+      <section className="page-section">
+        <div className="container">
+          <div className="loading" style={{ textAlign: 'center', padding: '3rem' }}>
+            <i className="fas fa-spinner fa-spin" style={{ fontSize: '3rem', color: 'var(--primary)' }}></i>
+            <p>Đang tải thông tin khóa học...</p>
+          </div>
+        </div>
+      </section>
     );
   }
 
-  return <Payment course={course} />;
+  if (error || !course) {
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="alert alert-error">
+            <i className="fas fa-exclamation-circle"></i> {error || "Không tìm thấy khóa học"}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="page-section">
+      <div className="container">
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h1 className="admin-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <i className="fas fa-shopping-cart"></i> Đăng ký khóa học
+          </h1>
+
+          <div className="course-form" style={{ marginBottom: '2rem' }}>
+            <h2 style={{ color: 'var(--primary-darker)', marginBottom: '1rem' }}>
+              {course.title}
+            </h2>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span className="badge" style={{ background: 'var(--badge-bg)', color: 'var(--primary-darker)', padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                {course.category}
+              </span>
+            </div>
+
+            <p style={{ color: 'var(--text)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+              {course.description}
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ padding: '1rem', background: '#f8f9fb', borderRadius: '8px' }}>
+                <i className="fas fa-clock" style={{ color: 'var(--primary)', marginRight: '0.5rem' }}></i>
+                <strong>Thời lượng:</strong> {course.duration || "Chưa cập nhật"}
+              </div>
+              <div style={{ padding: '1rem', background: '#f8f9fb', borderRadius: '8px' }}>
+                <i className="fas fa-users" style={{ color: 'var(--primary)', marginRight: '0.5rem' }}></i>
+                <strong>Học viên:</strong> {course.students || 0}
+              </div>
+              <div style={{ padding: '1rem', background: '#f8f9fb', borderRadius: '8px' }}>
+                <i className="fas fa-star" style={{ color: '#ffa500', marginRight: '0.5rem' }}></i>
+                <strong>Đánh giá:</strong> {course.rating || 0}/5
+              </div>
+              {course.instructor && (
+                <div style={{ padding: '1rem', background: '#f8f9fb', borderRadius: '8px' }}>
+                  <i className="fas fa-chalkboard-teacher" style={{ color: 'var(--primary)', marginRight: '0.5rem' }}></i>
+                  <strong>Giảng viên:</strong> {course.instructor}
+                </div>
+              )}
+            </div>
+
+            <div style={{ 
+              padding: '2rem', 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '12px',
+              color: 'white',
+              marginBottom: '2rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem', opacity: 0.9 }}>Giá khóa học</p>
+                  <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0 }}>
+                    {course.price ? Number(course.price).toLocaleString('vi-VN') + 'đ' : 'Miễn phí'}
+                  </h2>
+                </div>
+                <i className="fas fa-tag" style={{ fontSize: '3rem', opacity: 0.3 }}></i>
+              </div>
+            </div>
+
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem' }}
+              onClick={handleEnroll}
+              disabled={enrolling}
+            >
+              {enrolling ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i> Đang xử lý...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-check-circle"></i> Đăng ký ngay
+                </>
+              )}
+            </button>
+
+            <p style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '1rem', fontSize: '0.9rem' }}>
+              <i className="fas fa-info-circle"></i> Bạn sẽ có quyền truy cập vĩnh viễn sau khi đăng ký
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 };
 
 export default PaymentPage;

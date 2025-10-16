@@ -31,8 +31,31 @@ const Register = ({
     }
   };
 
+<<<<<<< HEAD
   const handlePasswordChange = (e) => {
     checkPasswordStrength(e.target.value);
+=======
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === "password") checkPasswordStrength(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ type: "", text: "" });
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/register", formData);
+      setMessage({ type: "success", text: "Đăng ký thành công!" });
+      console.log("Register success:", res.data);
+    } catch (err) {
+      console.error(err);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Đăng ký thất bại!",
+      });
+    }
+>>>>>>> 44066f8 (update)
   };
 
   return (

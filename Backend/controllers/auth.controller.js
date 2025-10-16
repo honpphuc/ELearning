@@ -17,18 +17,18 @@ export const register = async (req, res) => {
       !password ||
       !password_confirmation
     ) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({ error: "Dữ liệu không được bỏ trống" });
     }
 
     // 2️⃣ Kiểm tra xác nhận mật khẩu
     if (password !== password_confirmation) {
-      return res.status(400).json({ error: "Passwords do not match" });
+      return res.status(400).json({ error: "Mật khẩu không khớp" });
     }
 
     // 3️⃣ Kiểm tra email tồn tại
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ error: "Email already registered" });
+      return res.status(409).json({ error: "Email đã được đăng ký" });
     }
 
     // 4️⃣ Mã hoá mật khẩu
@@ -44,7 +44,7 @@ export const register = async (req, res) => {
 
     // 6️⃣ Trả về phản hồi thành công
     res.status(201).json({
-      message: "User registered successfully",
+      message: "Đăng ký thành công",
       user: {
         id: user._id,
         name: user.name,
@@ -52,8 +52,8 @@ export const register = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Đăng ký lỗi:", err);
+    res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };
 
@@ -64,19 +64,19 @@ export const login = async (req, res) => {
 
     // 1️⃣ Kiểm tra dữ liệu đầu vào
     if (!email || !password) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({ error: "Dữ liệu không được bỏ trống" });
     }
 
     // 2️⃣ Tìm người dùng
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Thông tin đăng nhập không hợp lệ" });
     }
 
     // 3️⃣ So sánh mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Thông tin đăng nhập không hợp lệ" });
     }
 
     // 4️⃣ Tạo JWT token
@@ -88,16 +88,17 @@ export const login = async (req, res) => {
 
     // 5️⃣ Trả về thông tin đăng nhập thành công
     res.json({
-      message: "Login successful",
+      message: "Đăng nhập thành công",
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role || "user",
       },
     });
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Đăng nhập lỗi:", err);
+    res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };

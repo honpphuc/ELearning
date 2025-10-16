@@ -3,8 +3,48 @@ import React, { useState } from "react";
 const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
   const [showPassword, setShowPassword] = useState(false);
 
+<<<<<<< HEAD
   const togglePassword = () => {
     setShowPassword(!showPassword);
+=======
+  const togglePassword = () => setShowPassword(!showPassword);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ type: "", text: "" });
+
+    try {
+      // Gửi request đến backend
+      const res = await axios.post("http://localhost:5000/api/auth/login", formData);
+
+      // ✅ Nếu thành công
+      setMessage({ type: "success", text: "Đăng nhập thành công!" });
+      console.log("Login success:", res.data);
+
+      // Lưu token vào localStorage
+      // ✅ Lưu token & user vào localStorage
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      // 🔔 Báo cho Layout biết user vừa đăng nhập để cập nhật menu ngay
+      window.dispatchEvent(new Event("userLogin"));
+
+      // ✅ Điều hướng sang trang home sau 1 giây
+      setTimeout(() => {
+        navigate("/home");
+      }, 1000);
+    } catch (err) {
+      console.error("Login error:", err.response?.data);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.error || "Đăng nhập thất bại!",
+      });
+    }
+>>>>>>> 44066f8 (update)
   };
 
   return (
