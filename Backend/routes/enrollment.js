@@ -5,6 +5,8 @@ import {
   checkEnrollment,
   unenrollCourse,
   completeLesson,
+  completeQuiz,
+  completeCourse,
 } from "../controllers/enrollment.controller.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -27,5 +29,7 @@ router.delete("/unenroll/:courseId", unenrollCourse);
 
 // Đánh dấu hoàn thành bài học
 router.patch("/complete-lesson", completeLesson);
+router.patch("/complete-quiz", completeQuiz);
+router.post("/complete-course", completeCourse);
 
 export default router;

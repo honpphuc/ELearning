@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../../config";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalAdmins: 0,
     totalRegularUsers: 0,
-    recentUsers: []
+    recentUsers: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,17 +18,17 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/admin/users", {
+      const response = await fetch(`${API_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Không lấy được thống kê");
       const users = await response.json();
-      
+
       setStats({
         totalUsers: users.length,
-        totalAdmins: users.filter(u => u.role === "admin").length,
-        totalRegularUsers: users.filter(u => u.role === "user").length,
-        recentUsers: users.slice(0, 5)
+        totalAdmins: users.filter((u) => u.role === "admin").length,
+        totalRegularUsers: users.filter((u) => u.role === "user").length,
+        recentUsers: users.slice(0, 5),
       });
     } catch (err) {
       setError(err.message);
@@ -36,21 +37,23 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) return (
-    <section className="page-section">
-      <div className="container">
-        <div className="loading">Đang tải...</div>
-      </div>
-    </section>
-  );
-  
-  if (error) return (
-    <section className="page-section">
-      <div className="container">
-        <div className="alert alert-error">Lỗi: {error}</div>
-      </div>
-    </section>
-  );
+  if (loading)
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="loading">Đang tải...</div>
+        </div>
+      </section>
+    );
+
+  if (error)
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="alert alert-error">Lỗi: {error}</div>
+        </div>
+      </section>
+    );
 
   return (
     <section className="page-section">
@@ -94,7 +97,9 @@ const AdminDashboard = () => {
 
         {/* Người dùng gần đây */}
         <div className="admin-table-wrap">
-          <h2 style={{ marginBottom: "1.5rem", color: "var(--primary-darker)" }}>
+          <h2
+            style={{ marginBottom: "1.5rem", color: "var(--primary-darker)" }}
+          >
             <i className="fas fa-clock"></i> Người dùng gần đây
           </h2>
           <table className="admin-table">
@@ -112,7 +117,11 @@ const AdminDashboard = () => {
                   <td>{u.name}</td>
                   <td>{u.email}</td>
                   <td>
-                    <span className={`badge ${u.role === "admin" ? "badge-admin" : "badge-user"}`}>
+                    <span
+                      className={`badge ${
+                        u.role === "admin" ? "badge-admin" : "badge-user"
+                      }`}
+                    >
                       {u.role === "admin" ? "Admin" : "User"}
                     </span>
                   </td>

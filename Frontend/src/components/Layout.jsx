@@ -30,26 +30,51 @@ const Layout = ({ children }) => {
   // Khi user đăng nhập thành công ở Login.jsx → thông báo cho Layout
   useEffect(() => {
     const handleUserLogin = () => loadUser();
+    const handleUserLogout = () => {
+      // when other parts of the app signal a logout, clear local state
+      setUser(null);
+      setUserMenuOpen(false);
+      setMobileMenuOpen(false);
+    };
+
     window.addEventListener("userLogin", handleUserLogin);
-    return () => window.removeEventListener("userLogin", handleUserLogin);
+    window.addEventListener("userLogout", handleUserLogout);
+    return () => {
+      window.removeEventListener("userLogin", handleUserLogin);
+      window.removeEventListener("userLogout", handleUserLogout);
+    };
   }, []);
 
   const toggleUserMenu = () => setUserMenuOpen(!userMenuOpen);
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // remove auth data
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // write a logout marker so other tabs receive a storage event
+      localStorage.setItem("logout", Date.now().toString());
+    } catch {
+      // ignore storage errors
+    }
+
+    // update local UI and notify same-tab listeners
     setUser(null);
-    window.location.href = "/login";
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    window.dispatchEvent(new Event("userLogout"));
+
+    // navigate to login and replace history so Back doesn't return to protected page
+    window.location.replace("/login");
   };
 
   return (
     <>
       <header className="header">
         <nav className="nav">
-          <button 
-            className="mobile-menu-btn" 
+          <button
+            className="mobile-menu-btn"
             onClick={toggleMobileMenu}
             aria-label="Toggle menu"
           >
@@ -63,19 +88,29 @@ const Layout = ({ children }) => {
 
           <ul className={`nav-links ${mobileMenuOpen ? "mobile-open" : ""}`}>
             <li>
-              <a href="/" onClick={() => setMobileMenuOpen(false)}>Trang chủ</a>
+              <a href="/" onClick={() => setMobileMenuOpen(false)}>
+                Trang chủ
+              </a>
             </li>
             <li>
-              <a href="/courses" onClick={() => setMobileMenuOpen(false)}>Khóa học</a>
+              <a href="/courses" onClick={() => setMobileMenuOpen(false)}>
+                Khóa học
+              </a>
             </li>
             <li>
-              <a href="/features" onClick={() => setMobileMenuOpen(false)}>Tính năng</a>
+              <a href="/features" onClick={() => setMobileMenuOpen(false)}>
+                Tính năng
+              </a>
             </li>
             <li>
-              <a href="/about" onClick={() => setMobileMenuOpen(false)}>Giới thiệu</a>
+              <a href="/about" onClick={() => setMobileMenuOpen(false)}>
+                Giới thiệu
+              </a>
             </li>
             <li>
-              <a href="/contact" onClick={() => setMobileMenuOpen(false)}>Liên hệ</a>
+              <a href="/contact" onClick={() => setMobileMenuOpen(false)}>
+                Liên hệ
+              </a>
             </li>
           </ul>
           <div className="auth-buttons">
@@ -116,7 +151,9 @@ const Layout = ({ children }) => {
                   <div className="dropdown-divider"></div>
                   <a
                     href="#"
-                    onClick={(e) => {
+                    onMouseDown={(e) => {
+                      // onMouseDown runs before blur, preventing the menu from closing
+                      // before logout logic executes.
                       e.preventDefault();
                       handleLogout();
                     }}
@@ -150,7 +187,8 @@ const Layout = ({ children }) => {
               <h3>EduLearn</h3>
             </div>
             <p className="footer-desc">
-              Nền tảng học trực tuyến hàng đầu Việt Nam, mang đến hàng nghìn khóa học chất lượng cao từ các chuyên gia.
+              Nền tảng học trực tuyến hàng đầu Việt Nam, mang đến hàng nghìn
+              khóa học chất lượng cao từ các chuyên gia.
             </p>
             <div className="social-links">
               <a href="#" aria-label="Facebook">
@@ -171,20 +209,52 @@ const Layout = ({ children }) => {
           <div className="footer-section">
             <h3>Khám phá</h3>
             <ul className="footer-links">
-              <li><a href="/courses"><i className="fas fa-chevron-right"></i> Khóa học</a></li>
-              <li><a href="/features"><i className="fas fa-chevron-right"></i> Tính năng</a></li>
-              <li><a href="/about"><i className="fas fa-chevron-right"></i> Về chúng tôi</a></li>
-              <li><a href="/contact"><i className="fas fa-chevron-right"></i> Liên hệ</a></li>
+              <li>
+                <a href="/courses">
+                  <i className="fas fa-chevron-right"></i> Khóa học
+                </a>
+              </li>
+              <li>
+                <a href="/features">
+                  <i className="fas fa-chevron-right"></i> Tính năng
+                </a>
+              </li>
+              <li>
+                <a href="/about">
+                  <i className="fas fa-chevron-right"></i> Về chúng tôi
+                </a>
+              </li>
+              <li>
+                <a href="/contact">
+                  <i className="fas fa-chevron-right"></i> Liên hệ
+                </a>
+              </li>
             </ul>
           </div>
 
           <div className="footer-section">
             <h3>Hỗ trợ</h3>
             <ul className="footer-links">
-              <li><a href="#"><i className="fas fa-chevron-right"></i> Trung tâm trợ giúp</a></li>
-              <li><a href="#"><i className="fas fa-chevron-right"></i> Điều khoản sử dụng</a></li>
-              <li><a href="#"><i className="fas fa-chevron-right"></i> Chính sách bảo mật</a></li>
-              <li><a href="#"><i className="fas fa-chevron-right"></i> Câu hỏi thường gặp</a></li>
+              <li>
+                <a href="#">
+                  <i className="fas fa-chevron-right"></i> Trung tâm trợ giúp
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <i className="fas fa-chevron-right"></i> Điều khoản sử dụng
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <i className="fas fa-chevron-right"></i> Chính sách bảo mật
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <i className="fas fa-chevron-right"></i> Câu hỏi thường gặp
+                </a>
+              </li>
             </ul>
           </div>
 

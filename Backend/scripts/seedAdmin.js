@@ -9,7 +9,7 @@ const seedAdmin = async () => {
   try {
     // Kết nối MongoDB
     await mongoose.connect(
-      process.env.MONGODB_URI || "mongodb://localhost:27017/edulearn"
+      process.env.MONGODB_URI || "mongodb://localhost:27017/onl"
     );
     console.log("✅ Connected to MongoDB");
 
@@ -23,10 +23,10 @@ const seedAdmin = async () => {
       await User.deleteOne({ email: adminEmail });
       console.log("✅ Old admin deleted");
     }
-    
+
     // Tạo admin mới
     const hashedPassword = await bcrypt.hash("123456a@", 10);
-    
+
     const adminUser = await User.create({
       name: "Admin",
       email: adminEmail,

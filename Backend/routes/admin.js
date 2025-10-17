@@ -8,6 +8,8 @@ import {
   createCourse,
   updateCourse,
   deleteCourse,
+  addSampleQuizToCourse,
+  addSampleQuizzesToAllCourses,
 } from "../controllers/admin.controller.js";
 import { authenticateToken, requireAdmin } from "../middleware/auth.js";
 
@@ -43,5 +45,9 @@ router.get("/courses/:id", async (req, res) => {
 router.post("/courses", createCourse);
 router.put("/courses/:id", updateCourse);
 router.delete("/courses/:id", deleteCourse);
+
+// Add simple sample quizzes
+router.post("/courses/:id/sample-quiz", addSampleQuizToCourse);
+router.post("/courses/sample-quizzes", addSampleQuizzesToAllCourses);
 
 export default router;

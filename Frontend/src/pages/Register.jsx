@@ -17,7 +17,8 @@ const Register = () => {
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const togglePassword = () => setShowPassword(!showPassword);
-  const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+  const toggleConfirmPassword = () =>
+    setShowConfirmPassword(!showConfirmPassword);
 
   const checkPasswordStrength = (password) => {
     if (!password) {
@@ -55,9 +56,11 @@ const Register = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: `${formData.firstName} ${formData.lastName}`,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
+          password_confirmation: formData.password_confirmation,
         }),
       });
 
@@ -67,7 +70,10 @@ const Register = () => {
         throw new Error(data.error || "Đăng ký thất bại!");
       }
 
-      setMessage({ type: "success", text: "Đăng ký thành công! Đang chuyển trang..." });
+      setMessage({
+        type: "success",
+        text: "Đăng ký thành công! Đang chuyển trang...",
+      });
 
       setTimeout(() => {
         navigate("/login");
@@ -106,7 +112,6 @@ const Register = () => {
                 noValidate
                 className="register-form"
               >
-
                 <div className="form-row-2">
                   <div className="form-group">
                     <label htmlFor="firstName">

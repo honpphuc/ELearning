@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../../config";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -12,7 +13,7 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/admin/users", {
+      const response = await fetch(`${API_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Không lấy được danh sách người dùng");
@@ -28,7 +29,7 @@ const AdminUsers = () => {
     if (!window.confirm(`Xóa người dùng "${name}"?`)) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+      const res = await fetch(`${API_URL}/admin/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -44,9 +45,12 @@ const AdminUsers = () => {
     if (!window.confirm(`Chuyển vai trò "${name}" thành ${newRole}?`)) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}/role`, {
+      const res = await fetch(`${API_URL}/admin/users/${id}/role`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ role: newRole }),
       });
       if (!res.ok) throw new Error("Cập nhật vai trò thất bại");
@@ -56,26 +60,28 @@ const AdminUsers = () => {
     }
   };
 
-  if (loading) return (
-    <section className="page-section">
-      <div className="container">
-        <div className="loading">Đang tải...</div>
-      </div>
-    </section>
-  );
-  
-  if (error) return (
-    <section className="page-section">
-      <div className="container">
-        <div className="alert alert-error">Lỗi: {error}</div>
-      </div>
-    </section>
-  );
+  if (loading)
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="loading">Đang tải...</div>
+        </div>
+      </section>
+    );
+
+  if (error)
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="alert alert-error">Lỗi: {error}</div>
+        </div>
+      </section>
+    );
 
   // Tính thống kê
   const totalUsers = users.length;
-  const totalAdmins = users.filter(u => u.role === "admin").length;
-  const totalRegularUsers = users.filter(u => u.role === "user").length;
+  const totalAdmins = users.filter((u) => u.role === "admin").length;
+  const totalRegularUsers = users.filter((u) => u.role === "user").length;
 
   return (
     <section className="page-section">
@@ -120,45 +126,48 @@ const AdminUsers = () => {
         {/* Bảng danh sách */}
         <div className="admin-table-wrap">
           <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Tên</th>
-              <th>Email</th>
-              <th>Vai trò</th>
-              <th>Ngày tạo</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u._id}>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td>
-                  <span className={`badge ${u.role === "admin" ? "badge-admin" : "badge-user"}`}>
-                    {u.role === "admin" ? "Admin" : "User"}
-                  </span>
-                </td>
-                <td>{new Date(u.createdAt).toLocaleDateString("vi-VN")}</td>
-                <td>
-                  <button 
-                    className="btn btn-sm btn-success" 
-                    onClick={() => handleToggleRole(u._id, u.role, u.name)}
-                  >
-                    <i className="fas fa-exchange-alt"></i> Chuyển vai trò
-                  </button>
-                  {" "}
-                  <button 
-                    className="btn btn-sm btn-danger" 
-                    onClick={() => handleDeleteUser(u._id, u.name)}
-                  >
-                    <i className="fas fa-trash"></i> Xóa
-                  </button>
-                </td>
+            <thead>
+              <tr>
+                <th>Tên</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u._id}>
+                  <td>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        u.role === "admin" ? "badge-admin" : "badge-user"
+                      }`}
+                    >
+                      {u.role === "admin" ? "Admin" : "User"}
+                    </span>
+                  </td>
+                  <td>{new Date(u.createdAt).toLocaleDateString("vi-VN")}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => handleToggleRole(u._id, u.role, u.name)}
+                    >
+                      <i className="fas fa-exchange-alt"></i> Chuyển vai trò
+                    </button>{" "}
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteUser(u._id, u.name)}
+                    >
+                      <i className="fas fa-trash"></i> Xóa
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

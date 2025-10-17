@@ -26,10 +26,18 @@ const enrollmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    completedLessons: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Lesson"
-    }],
+    completedLessons: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Lesson",
+      },
+    ],
+    completedQuizzes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Quiz",
+      },
+    ],
   },
   {
     timestamps: true,

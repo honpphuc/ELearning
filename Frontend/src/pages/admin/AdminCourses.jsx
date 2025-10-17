@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../../config";
 
 const AdminCourses = () => {
   const navigate = useNavigate();
@@ -8,17 +9,17 @@ const AdminCourses = () => {
   const [error, setError] = useState("");
 
   // Form for creating a course
-  const [form, setForm] = useState({ 
-    title: "", 
-    category: "", 
-    description: "", 
+  const [form, setForm] = useState({
+    title: "",
+    category: "",
+    description: "",
     price: "",
     duration: "",
     lectures: "",
     exercises: "",
     instructor: "",
     level: "",
-    videoUrl: ""
+    videoUrl: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -30,7 +31,7 @@ const AdminCourses = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/admin/courses", {
+      const res = await fetch(`${API_URL}/admin/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Không lấy được danh sách khóa học");
@@ -43,7 +44,8 @@ const AdminCourses = () => {
     }
   };
 
-  const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const handleChange = (e) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -51,9 +53,12 @@ const AdminCourses = () => {
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/admin/courses", {
+      const res = await fetch(`${API_URL}/admin/courses`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(form),
       });
       if (!res.ok) {
@@ -61,17 +66,17 @@ const AdminCourses = () => {
         throw new Error(data.error || "Tạo khóa học thất bại");
       }
       alert("✅ Tạo khóa học thành công!");
-      setForm({ 
-        title: "", 
-        category: "", 
-        description: "", 
-        price: "", 
+      setForm({
+        title: "",
+        category: "",
+        description: "",
+        price: "",
         duration: "",
         lectures: "",
         exercises: "",
         instructor: "",
         level: "",
-        videoUrl: ""
+        videoUrl: "",
       });
       fetchCourses();
     } catch (err) {
@@ -85,7 +90,10 @@ const AdminCourses = () => {
     if (!window.confirm(`Xóa khóa học "${title}"?`)) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/admin/courses/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_URL}/admin/courses/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error("Xóa thất bại");
       fetchCourses();
     } catch (err) {
@@ -93,26 +101,65 @@ const AdminCourses = () => {
     }
   };
 
-  if (loading) return (
-    <section className="page-section">
-      <div className="container">
-        <div className="loading">Đang tải...</div>
-      </div>
-    </section>
-  );
-  
-  if (error) return (
-    <section className="page-section">
-      <div className="container">
-        <div className="alert alert-error">Lỗi: {error}</div>
-      </div>
-    </section>
-  );
+  const handleAddSampleQuiz = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/admin/courses/${id}/sample-quiz`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Thêm bài tập mẫu thất bại");
+      alert("✅ Đã thêm bài tập mẫu cho khóa học");
+      fetchCourses();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleAddSampleQuizzesAll = async () => {
+    if (
+      !window.confirm("Thêm bài tập mẫu cho tất cả khóa học chưa có bài tập?")
+    )
+      return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/admin/courses/sample-quizzes`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Thêm bài tập mẫu thất bại");
+      alert(`✅ Đã thêm bài tập mẫu cho ${data.updated || 0} khóa học`);
+      fetchCourses();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  if (loading)
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="loading">Đang tải...</div>
+        </div>
+      </section>
+    );
+
+  if (error)
+    return (
+      <section className="page-section">
+        <div className="container">
+          <div className="alert alert-error">Lỗi: {error}</div>
+        </div>
+      </section>
+    );
 
   // Tính thống kê
   const totalCourses = courses.length;
   const totalRevenue = courses.reduce((sum, c) => sum + (c.price || 0), 0);
-  const avgPrice = totalCourses > 0 ? Math.round(totalRevenue / totalCourses) : 0;
+  const avgPrice =
+    totalCourses > 0 ? Math.round(totalRevenue / totalCourses) : 0;
 
   return (
     <section className="page-section">
@@ -136,7 +183,9 @@ const AdminCourses = () => {
 
           <div className="admin-card">
             <h3>Tổng doanh thu tiềm năng</h3>
-            <span className="stat-number">{totalRevenue.toLocaleString('vi-VN')}</span>
+            <span className="stat-number">
+              {totalRevenue.toLocaleString("vi-VN")}
+            </span>
             <div className="stat-label">
               <i className="fas fa-dollar-sign"></i>
               VND
@@ -145,7 +194,9 @@ const AdminCourses = () => {
 
           <div className="admin-card">
             <h3>Giá trung bình</h3>
-            <span className="stat-number">{avgPrice.toLocaleString('vi-VN')}</span>
+            <span className="stat-number">
+              {avgPrice.toLocaleString("vi-VN")}
+            </span>
             <div className="stat-label">
               <i className="fas fa-chart-line"></i>
               VND / khóa học
@@ -153,29 +204,42 @@ const AdminCourses = () => {
           </div>
         </div>
 
+        {/* Hành động nhanh */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <button
+            className="btn btn-outline"
+            onClick={handleAddSampleQuizzesAll}
+          >
+            <i className="fas fa-tasks"></i> Thêm bài tập mẫu cho tất cả khóa
+            học
+          </button>
+        </div>
+
         {/* Form tạo khóa học */}
         <form onSubmit={handleCreate} className="course-form">
-          <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary-darker)' }}>
+          <h3
+            style={{ marginBottom: "1.5rem", color: "var(--primary-darker)" }}
+          >
             <i className="fas fa-plus-circle"></i> Thêm khóa học mới
           </h3>
           <div className="form-row">
-            <input 
-              name="title" 
-              value={form.title} 
-              onChange={handleChange} 
-              placeholder="Tiêu đề khóa học *" 
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="Tiêu đề khóa học *"
               required
             />
-            <select 
-              name="category" 
-              value={form.category} 
+            <select
+              name="category"
+              value={form.category}
               onChange={handleChange}
-              style={{ 
-                padding: '0.9rem 1.2rem',
-                border: '2px solid #e8ecf1',
-                borderRadius: '10px',
-                fontSize: '0.95rem',
-                fontFamily: 'inherit'
+              style={{
+                padding: "0.9rem 1.2rem",
+                border: "2px solid #e8ecf1",
+                borderRadius: "10px",
+                fontSize: "0.95rem",
+                fontFamily: "inherit",
               }}
               required
             >
@@ -186,58 +250,58 @@ const AdminCourses = () => {
             </select>
           </div>
           <div className="form-row">
-            <input 
-              name="price" 
-              value={form.price} 
-              onChange={handleChange} 
-              placeholder="Giá (VND)" 
-              type="number"
-              min="0"
-            />
-            <input 
-              name="duration" 
-              value={form.duration || ""} 
-              onChange={handleChange} 
-              placeholder="Thời lượng (VD: 10 giờ)" 
-            />
-          </div>
-          <div className="form-row">
-            <input 
-              name="instructor" 
-              value={form.instructor || ""} 
-              onChange={handleChange} 
-              placeholder="Tên giảng viên (VD: Nguyễn Văn A)" 
-            />
-          </div>
-          <div className="form-row">
-            <input 
-              name="lectures" 
-              value={form.lectures || ""} 
-              onChange={handleChange} 
-              placeholder="Số bài giảng (VD: 45)" 
-              type="number"
-              min="0"
-            />
-            <input 
-              name="exercises" 
-              value={form.exercises || ""} 
-              onChange={handleChange} 
-              placeholder="Số bài tập (VD: 12)" 
-              type="number"
-              min="0"
-            />
-          </div>
-          <div className="form-row">
-            <select 
-              name="level" 
-              value={form.level || ""} 
+            <input
+              name="price"
+              value={form.price}
               onChange={handleChange}
-              style={{ 
-                padding: '0.9rem 1.2rem',
-                border: '2px solid #e8ecf1',
-                borderRadius: '10px',
-                fontSize: '0.95rem',
-                fontFamily: 'inherit'
+              placeholder="Giá (VND)"
+              type="number"
+              min="0"
+            />
+            <input
+              name="duration"
+              value={form.duration || ""}
+              onChange={handleChange}
+              placeholder="Thời lượng (VD: 10 giờ)"
+            />
+          </div>
+          <div className="form-row">
+            <input
+              name="instructor"
+              value={form.instructor || ""}
+              onChange={handleChange}
+              placeholder="Tên giảng viên (VD: Nguyễn Văn A)"
+            />
+          </div>
+          <div className="form-row">
+            <input
+              name="lectures"
+              value={form.lectures || ""}
+              onChange={handleChange}
+              placeholder="Số bài giảng (VD: 45)"
+              type="number"
+              min="0"
+            />
+            <input
+              name="exercises"
+              value={form.exercises || ""}
+              onChange={handleChange}
+              placeholder="Số bài tập (VD: 12)"
+              type="number"
+              min="0"
+            />
+          </div>
+          <div className="form-row">
+            <select
+              name="level"
+              value={form.level || ""}
+              onChange={handleChange}
+              style={{
+                padding: "0.9rem 1.2rem",
+                border: "2px solid #e8ecf1",
+                borderRadius: "10px",
+                fontSize: "0.95rem",
+                fontFamily: "inherit",
               }}
             >
               <option value="">Chọn trình độ</option>
@@ -247,19 +311,19 @@ const AdminCourses = () => {
             </select>
           </div>
           <div className="form-row">
-            <input 
-              name="videoUrl" 
-              value={form.videoUrl || ""} 
-              onChange={handleChange} 
-              placeholder="URL Video (YouTube, Vimeo, etc. - VD: https://www.youtube.com/watch?v=xxxxx)" 
+            <input
+              name="videoUrl"
+              value={form.videoUrl || ""}
+              onChange={handleChange}
+              placeholder="URL Video (YouTube, Vimeo, etc. - VD: https://www.youtube.com/watch?v=xxxxx)"
               type="url"
             />
           </div>
           <div className="form-row">
-            <textarea 
-              name="description" 
-              value={form.description} 
-              onChange={handleChange} 
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
               placeholder="Mô tả khóa học"
               rows="4"
             />
@@ -281,7 +345,9 @@ const AdminCourses = () => {
 
         {/* Bảng danh sách khóa học */}
         <div className="admin-table-wrap">
-          <h2 style={{ marginBottom: "1.5rem", color: "var(--primary-darker)" }}>
+          <h2
+            style={{ marginBottom: "1.5rem", color: "var(--primary-darker)" }}
+          >
             <i className="fas fa-list"></i> Danh sách khóa học
           </h2>
           <table className="admin-table">
@@ -301,51 +367,90 @@ const AdminCourses = () => {
             <tbody>
               {courses.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted)' }}>
-                    <i className="fas fa-inbox" style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block' }}></i>
+                  <td
+                    colSpan={9}
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    <i
+                      className="fas fa-inbox"
+                      style={{
+                        fontSize: "3rem",
+                        marginBottom: "1rem",
+                        display: "block",
+                      }}
+                    ></i>
                     Chưa có khóa học nào
                   </td>
                 </tr>
               )}
-              {courses.map(c => (
+              {courses.map((c) => (
                 <tr key={c._id}>
-                  <td><strong>{c.title}</strong></td>
-                  <td>{c.instructor || '-'}</td>
                   <td>
-                    <span className="badge" style={{ background: 'var(--badge-bg)', color: 'var(--primary-darker)' }}>
-                      {c.category || '-'}
+                    <strong>{c.title}</strong>
+                  </td>
+                  <td>{c.instructor || "-"}</td>
+                  <td>
+                    <span
+                      className="badge"
+                      style={{
+                        background: "var(--badge-bg)",
+                        color: "var(--primary-darker)",
+                      }}
+                    >
+                      {c.category || "-"}
                     </span>
                   </td>
                   <td>
-                    <strong style={{ color: 'var(--accent)' }}>
-                      {c.price ? Number(c.price).toLocaleString('vi-VN') + 'đ' : 'Miễn phí'}
+                    <strong style={{ color: "var(--accent)" }}>
+                      {c.price
+                        ? Number(c.price).toLocaleString("vi-VN") + "đ"
+                        : "Miễn phí"}
                     </strong>
                   </td>
                   <td>
-                    <span style={{ color: '#ffa500', fontWeight: 'bold' }}>
+                    <span style={{ color: "#ffa500", fontWeight: "bold" }}>
                       <i className="fas fa-star"></i> {c.rating || 0}
                     </span>
                   </td>
                   <td>
-                    <i className="fas fa-video" style={{ color: 'var(--primary)' }}></i> {c.lectures || 0}
+                    <i
+                      className="fas fa-video"
+                      style={{ color: "var(--primary)" }}
+                    ></i>{" "}
+                    {c.lectures || 0}
                   </td>
                   <td>
-                    <i className="fas fa-file-alt" style={{ color: 'var(--accent)' }}></i> {c.exercises || 0}
+                    <i
+                      className="fas fa-file-alt"
+                      style={{ color: "var(--accent)" }}
+                    ></i>{" "}
+                    {c.exercises || 0}
                   </td>
-                  <td>{c.duration || '-'}</td>
+                  <td>{c.duration || "-"}</td>
                   <td>
-                    <button 
-                      className="btn btn-sm btn-primary" 
+                    <button
+                      className="btn btn-sm btn-primary"
                       onClick={() => navigate(`/admin/courses/${c._id}/edit`)}
-                      style={{ marginRight: '0.5rem' }}
+                      style={{ marginRight: "0.5rem" }}
                     >
                       <i className="fas fa-edit"></i> Sửa
                     </button>
-                    <button 
-                      className="btn btn-sm btn-danger" 
+                    <button
+                      className="btn btn-sm btn-danger"
                       onClick={() => handleDelete(c._id, c.title)}
                     >
                       <i className="fas fa-trash"></i> Xóa
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline"
+                      onClick={() => handleAddSampleQuiz(c._id)}
+                      style={{ marginLeft: "0.5rem" }}
+                    >
+                      <i className="fas fa-plus"></i> Thêm quiz mẫu
                     </button>
                   </td>
                 </tr>
