@@ -116,7 +116,8 @@ export const createCourse = async (req, res) => {
       lectures,
       exercises,
       instructor,
-      level
+      level,
+      videoUrl
     } = req.body;
 
     if (!title) {
@@ -135,6 +136,7 @@ export const createCourse = async (req, res) => {
       exercises: exercises || 0,
       instructor: instructor || "",
       level: level || "",
+      videoUrl: videoUrl || "",
     });
 
     await course.save();

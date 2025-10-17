@@ -1,14 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const Layout = ({ children, user = null }) => {
+const Layout = ({ children }) => {
+  const [user, setUser] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-<<<<<<< HEAD
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
-=======
-  // 🔹 Hàm đọc user từ localStorage
+  // Hàm đọc user từ localStorage
   const loadUser = () => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -23,14 +20,14 @@ const Layout = ({ children, user = null }) => {
     // Khi Layout mount lần đầu → load user
     loadUser();
 
-    // 🔹 Khi tab khác hoặc component khác cập nhật localStorage → tự cập nhật user
+    // Khi tab khác hoặc component khác cập nhật localStorage → tự cập nhật user
     const handleStorageChange = () => loadUser();
     window.addEventListener("storage", handleStorageChange);
 
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // 🔹 Khi user đăng nhập thành công ở Login.jsx → thông báo cho Layout
+  // Khi user đăng nhập thành công ở Login.jsx → thông báo cho Layout
   useEffect(() => {
     const handleUserLogin = () => loadUser();
     window.addEventListener("userLogin", handleUserLogin);
@@ -45,7 +42,6 @@ const Layout = ({ children, user = null }) => {
     localStorage.removeItem("user");
     setUser(null);
     window.location.href = "/login";
->>>>>>> 44066f8 (update)
   };
 
   return (
@@ -64,12 +60,8 @@ const Layout = ({ children, user = null }) => {
             <i className="fas fa-graduation-cap"></i>
             <span>EduLearn</span>
           </div>
-<<<<<<< HEAD
-          <ul className="nav-links">
-=======
 
           <ul className={`nav-links ${mobileMenuOpen ? "mobile-open" : ""}`}>
->>>>>>> 44066f8 (update)
             <li>
               <a href="/" onClick={() => setMobileMenuOpen(false)}>Trang chủ</a>
             </li>
@@ -121,13 +113,6 @@ const Layout = ({ children, user = null }) => {
                       </a>
                     </>
                   )}
-<<<<<<< HEAD
-                  <form method="POST" action="/logout">
-                    <button type="submit" className="logout-btn">
-                      Đăng xuất
-                    </button>
-                  </form>
-=======
                   <div className="dropdown-divider"></div>
                   <a
                     href="#"
@@ -139,7 +124,6 @@ const Layout = ({ children, user = null }) => {
                   >
                     <i className="fas fa-sign-out-alt"></i> Đăng xuất
                   </a>
->>>>>>> 44066f8 (update)
                 </div>
               </div>
             ) : (
@@ -161,36 +145,6 @@ const Layout = ({ children, user = null }) => {
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-section">
-<<<<<<< HEAD
-            <h3>EduLearn</h3>
-            <p>Nền tảng học trực tuyến hàng đầu Việt Nam</p>
-            <div className="social-links">
-              <a href="#">
-                <i className="fab fa-facebook"></i>
-              </a>
-              <a href="#">
-                <i className="fab fa-twitter"></i>
-              </a>
-              <a href="#">
-                <i className="fab fa-instagram"></i>
-              </a>
-              <a href="#">
-                <i className="fab fa-linkedin"></i>
-              </a>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h3>Liên kết</h3>
-            <a href="/about">Giới thiệu</a>
-            <a href="/courses">Khóa học</a>
-            <a href="/contact">Liên hệ</a>
-          </div>
-          <div className="footer-section">
-            <h3>Hỗ trợ</h3>
-            <a href="#">Trung tâm trợ giúp</a>
-            <a href="#">Điều khoản dịch vụ</a>
-            <a href="#">Chính sách bảo mật</a>
-=======
             <div className="footer-logo">
               <i className="fas fa-graduation-cap"></i>
               <h3>EduLearn</h3>
@@ -212,7 +166,6 @@ const Layout = ({ children, user = null }) => {
                 <i className="fab fa-youtube"></i>
               </a>
             </div>
->>>>>>> 44066f8 (update)
           </div>
 
           <div className="footer-section">

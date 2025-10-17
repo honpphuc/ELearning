@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AdminCourses = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -15,7 +17,8 @@ const AdminCourses = () => {
     lectures: "",
     exercises: "",
     instructor: "",
-    level: ""
+    level: "",
+    videoUrl: ""
   });
   const [saving, setSaving] = useState(false);
 
@@ -67,7 +70,8 @@ const AdminCourses = () => {
         lectures: "",
         exercises: "",
         instructor: "",
-        level: ""
+        level: "",
+        videoUrl: ""
       });
       fetchCourses();
     } catch (err) {
@@ -243,6 +247,15 @@ const AdminCourses = () => {
             </select>
           </div>
           <div className="form-row">
+            <input 
+              name="videoUrl" 
+              value={form.videoUrl || ""} 
+              onChange={handleChange} 
+              placeholder="URL Video (YouTube, Vimeo, etc. - VD: https://www.youtube.com/watch?v=xxxxx)" 
+              type="url"
+            />
+          </div>
+          <div className="form-row">
             <textarea 
               name="description" 
               value={form.description} 
@@ -321,6 +334,13 @@ const AdminCourses = () => {
                   </td>
                   <td>{c.duration || '-'}</td>
                   <td>
+                    <button 
+                      className="btn btn-sm btn-primary" 
+                      onClick={() => navigate(`/admin/courses/${c._id}/edit`)}
+                      style={{ marginRight: '0.5rem' }}
+                    >
+                      <i className="fas fa-edit"></i> Sửa
+                    </button>
                     <button 
                       className="btn btn-sm btn-danger" 
                       onClick={() => handleDelete(c._id, c.title)}

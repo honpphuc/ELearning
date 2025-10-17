@@ -60,6 +60,82 @@ const courseSchema = new mongoose.Schema(
       default: "",
       description: "Trình độ khóa học",
     },
+    // Video cho khóa học
+    videoUrl: {
+      type: String,
+      default: "",
+      description: "URL video giới thiệu (YouTube, Vimeo, etc.)",
+    },
+    lessons: [
+      {
+        title: {
+          type: String,
+          required: true,
+        },
+        videoUrl: {
+          type: String,
+          required: true,
+          description: "URL video bài học",
+        },
+        duration: {
+          type: String,
+          default: "",
+        },
+        description: {
+          type: String,
+          default: "",
+        },
+        order: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
+    // Bài kiểm tra cho khóa học
+    quizzes: [
+      {
+        title: {
+          type: String,
+          required: true,
+        },
+        description: {
+          type: String,
+          default: "",
+        },
+        questions: [
+          {
+            question: {
+              type: String,
+              required: true,
+            },
+            options: [
+              {
+                type: String,
+                required: true,
+              },
+            ],
+            correctAnswer: {
+              type: Number,
+              required: true,
+              description: "Index của đáp án đúng (0-based)",
+            },
+            explanation: {
+              type: String,
+              default: "",
+            },
+          },
+        ],
+        passingScore: {
+          type: Number,
+          default: 70,
+          description: "Điểm tối thiểu để pass (%)",
+        },
+        order: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

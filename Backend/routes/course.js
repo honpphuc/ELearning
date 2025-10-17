@@ -20,7 +20,14 @@ router.get("/popular", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const courses = await Course.find().sort({ createdAt: -1 });
-    res.json(courses);
+    // Thêm trường tổng hợp số bài học, số video, số bài kiểm tra
+    const result = courses.map((course) => ({
+      ...course.toObject(),
+      lessonCount: course.lessons ? course.lessons.length : 0,
+      videoCount: course.lessons ? course.lessons.filter(l => l.videoUrl).length : 0,
+      quizCount: course.quizzes ? course.quizzes.length : 0,
+    }));
+    res.json(result);
   } catch (error) {
     console.error("Get courses error:", error);
     res.status(500).json({ error: "Lỗi máy chủ" });
@@ -31,12 +38,17 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
-    
     if (!course) {
       return res.status(404).json({ error: "Khóa học không tồn tại" });
     }
-    
-    res.json(course);
+    // Thêm trường tổng hợp số bài học, số video, số bài kiểm tra
+    const result = {
+      ...course.toObject(),
+      lessonCount: course.lessons ? course.lessons.length : 0,
+      videoCount: course.lessons ? course.lessons.filter(l => l.videoUrl).length : 0,
+      quizCount: course.quizzes ? course.quizzes.length : 0,
+    };
+    res.json(result);
   } catch (error) {
     console.error("Get course detail error:", error);
     res.status(500).json({ error: "Lỗi máy chủ" });

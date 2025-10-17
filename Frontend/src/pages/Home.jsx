@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../config";
 
 const Home = () => {
   const [popularCourses, setPopularCourses] = useState([]);
@@ -39,7 +40,7 @@ const Home = () => {
   const fetchPopularCourses = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/courses/popular");
+      const res = await fetch(`${API_URL}/courses/popular`);
       if (res.ok) {
         const data = await res.json();
         setPopularCourses(data);

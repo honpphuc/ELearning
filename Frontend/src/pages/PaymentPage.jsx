@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 const PaymentPage = () => {
   const { id } = useParams();
@@ -16,7 +17,7 @@ const PaymentPage = () => {
   const fetchCourse = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/courses/${id}`);
+      const res = await fetch(`${API_URL}/courses/${id}`);
       if (!res.ok) throw new Error("Không tìm thấy khóa học");
       const data = await res.json();
       setCourse(data);
@@ -37,7 +38,7 @@ const PaymentPage = () => {
       }
 
       setEnrolling(true);
-      const res = await fetch("http://localhost:5000/api/enrollments/enroll", {
+      const res = await fetch(`${API_URL}/enrollments/enroll`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

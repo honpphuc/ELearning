@@ -19,28 +19,24 @@ const seedAdmin = async () => {
 
     if (existingAdmin) {
       console.log("⚠️  Admin user already exists:", adminEmail);
-      
-      // Cập nhật role nếu chưa phải admin
-      if (existingAdmin.role !== "admin") {
-        existingAdmin.role = "admin";
-        await existingAdmin.save();
-        console.log("✅ Updated existing user to admin role");
-      }
-    } else {
-      // Tạo admin mới
-      const hashedPassword = await bcrypt.hash("123456a@", 10);
-      
-      const adminUser = await User.create({
-        name: "Admin",
-        email: adminEmail,
-        password: hashedPassword,
-        role: "admin",
-      });
-
-      console.log("✅ Admin user created successfully!");
-      console.log("📧 Email:", adminUser.email);
-      console.log("🔑 Password: 123456a@");
+      console.log("🗑️  Deleting old admin...");
+      await User.deleteOne({ email: adminEmail });
+      console.log("✅ Old admin deleted");
     }
+    
+    // Tạo admin mới
+    const hashedPassword = await bcrypt.hash("123456a@", 10);
+    
+    const adminUser = await User.create({
+      name: "Admin",
+      email: adminEmail,
+      password: hashedPassword,
+      role: "admin",
+    });
+
+    console.log("✅ Admin user created successfully!");
+    console.log("📧 Email:", adminUser.email);
+    console.log("🔑 Password: 123456a@");
 
     await mongoose.connection.close();
     console.log("✅ Database connection closed");

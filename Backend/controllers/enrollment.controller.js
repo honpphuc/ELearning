@@ -1,3 +1,35 @@
+// Đánh dấu hoàn thành bài học
+export const completeLesson = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { courseId, lessonId } = req.body;
+    if (!courseId || !lessonId) {
+      return res.status(400).json({ error: "Thiếu courseId hoặc lessonId" });
+    }
+    const enrollment = await Enrollment.findOne({ userId, courseId });
+    if (!enrollment) {
+      return res.status(404).json({ error: "Bạn chưa đăng ký khóa học này" });
+    }
+    // Nếu đã có thì không thêm lại
+    if (!enrollment.completedLessons) enrollment.completedLessons = [];
+    if (!enrollment.completedLessons.map(id => id.toString()).includes(lessonId)) {
+      enrollment.completedLessons.push(lessonId);
+      // Cập nhật progress
+      const course = await Course.findById(courseId);
+      const totalLessons = course?.lessons?.length || 1;
+      enrollment.progress = Math.min(100, Math.round((enrollment.completedLessons.length / totalLessons) * 100));
+      // Nếu hoàn thành hết thì completed=true
+      if (enrollment.completedLessons.length === totalLessons) {
+        enrollment.completed = true;
+      }
+      await enrollment.save();
+    }
+    res.json({ success: true, completedLessons: enrollment.completedLessons, progress: enrollment.progress, completed: enrollment.completed });
+  } catch (error) {
+    console.error("Complete lesson error:", error);
+    res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};
 import Enrollment from "../models/Enrollment.js";
 import Course from "../models/Course.js";
 

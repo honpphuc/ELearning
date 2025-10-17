@@ -1,21 +1,23 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
-const Register = ({
-  csrfToken = "",
-  errorMessage = "",
-  successMessage = "",
-}) => {
+const Register = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-  const togglePassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPassword = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
+  const togglePassword = () => setShowPassword(!showPassword);
+  const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
 
   const checkPasswordStrength = (password) => {
     if (!password) {
@@ -31,10 +33,6 @@ const Register = ({
     }
   };
 
-<<<<<<< HEAD
-  const handlePasswordChange = (e) => {
-    checkPasswordStrength(e.target.value);
-=======
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (e.target.name === "password") checkPasswordStrength(e.target.value);
@@ -44,18 +42,42 @@ const Register = ({
     e.preventDefault();
     setMessage({ type: "", text: "" });
 
+    // Validate password match
+    if (formData.password !== formData.password_confirmation) {
+      setMessage({ type: "error", text: "Mật khẩu xác nhận không khớp!" });
+      return;
+    }
+
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", formData);
-      setMessage({ type: "success", text: "Đăng ký thành công!" });
-      console.log("Register success:", res.data);
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Đăng ký thất bại!");
+      }
+
+      setMessage({ type: "success", text: "Đăng ký thành công! Đang chuyển trang..." });
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err) {
-      console.error(err);
       setMessage({
         type: "error",
-        text: err.response?.data?.message || "Đăng ký thất bại!",
+        text: err.message || "Đăng ký thất bại!",
       });
     }
->>>>>>> 44066f8 (update)
   };
 
   return (
@@ -66,20 +88,24 @@ const Register = ({
           <div className="register-form-wrapper">
             <div className="register-form-card">
               <h2>Đăng ký tài khoản</h2>
-              {errorMessage && (
-                <div className="alert alert-error">{errorMessage}</div>
+              {message.type === "error" && (
+                <div className="alert alert-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {message.text}
+                </div>
               )}
-              {successMessage && (
-                <div className="alert alert-success">{successMessage}</div>
+              {message.type === "success" && (
+                <div className="alert alert-success">
+                  <i className="fas fa-check-circle"></i>
+                  {message.text}
+                </div>
               )}
 
               <form
-                method="POST"
-                action="/register"
+                onSubmit={handleSubmit}
                 noValidate
                 className="register-form"
               >
-                <input type="hidden" name="_csrf" value={csrfToken} />
 
                 <div className="form-row-2">
                   <div className="form-group">
@@ -92,6 +118,8 @@ const Register = ({
                       name="firstName"
                       placeholder="Nguyễn"
                       required
+                      value={formData.firstName}
+                      onChange={handleChange}
                     />
                   </div>
                   <div className="form-group">
@@ -104,6 +132,8 @@ const Register = ({
                       name="lastName"
                       placeholder="Văn A"
                       required
+                      value={formData.lastName}
+                      onChange={handleChange}
                     />
                   </div>
                 </div>
@@ -119,6 +149,8 @@ const Register = ({
                     placeholder="example@email.com"
                     required
                     autoComplete="email"
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </div>
 
@@ -134,7 +166,8 @@ const Register = ({
                       placeholder="Tối thiểu 8 ký tự"
                       required
                       autoComplete="new-password"
-                      onChange={handlePasswordChange}
+                      value={formData.password}
+                      onChange={handleChange}
                     />
                     <button
                       type="button"
@@ -180,6 +213,8 @@ const Register = ({
                       placeholder="Nhập lại mật khẩu"
                       required
                       autoComplete="new-password"
+                      value={formData.password_confirmation}
+                      onChange={handleChange}
                     />
                     <button
                       type="button"

@@ -1,75 +1,118 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
+
+// Helper function để convert YouTube URL sang embed URL
+const getEmbedUrl = (url) => {
+  if (!url) return null;
+  
+  // YouTube
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    const videoId = url.includes('youtube.com') 
+      ? url.split('v=')[1]?.split('&')[0]
+      : url.split('youtu.be/')[1]?.split('?')[0];
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+  }
+  
+  // Vimeo
+  if (url.includes('vimeo.com')) {
+    const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+    return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+  }
+  
+  // Nếu đã là embed URL thì return luôn
+  if (url.includes('embed')) return url;
+  
+  return null;
+};
 
 // Giao diện chi tiết khóa học - tiếng Việt
-const CourseDetail = ({
-  title = "Lập trình React từ cơ bản đến nâng cao",
-  description = "Khóa học giúp bạn làm chủ React và xây dựng ứng dụng thực tế.",
-  category = "Lập trình web",
-  rating = 4.7,
-  students = 1200,
-  duration = "20 giờ",
-  level = "Trung cấp",
-  instructor = "Nguyễn Văn A",
-  instructorTitle = "Senior Frontend Developer",
-  instructorBio = "Giảng viên có 10 năm kinh nghiệm phát triển web với React, Node.js.",
-  price = 199000,
-  lectures = 45,
-  assignments = 12,
-  certificate = true,
-  icon = "fas fa-laptop-code",
-  defaultCourse = { id: 1 },
-  fullDescription = "Khóa học này cung cấp kiến thức từ cơ bản đến nâng cao về React, giúp bạn tự tin xây dựng các ứng dụng web hiện đại.",
-  learningOutcomes = [
-    "Hiểu rõ về React và cách hoạt động",
-    "Xây dựng giao diện web chuyên nghiệp",
-    "Quản lý state hiệu quả",
-    "Kết nối API và xử lý dữ liệu",
-    "Triển khai ứng dụng lên môi trường thực tế",
-  ],
-  requirements = [
-    "Biết sử dụng máy tính cơ bản",
-    "Có kiến thức HTML, CSS, JavaScript cơ bản",
-  ],
-  curriculum = [
-    {
-      section: "Giới thiệu React",
-      lectures: 5,
-      duration: "2 giờ",
-      lessons: [
-        { title: "React là gì?", duration: "20 phút", free: true },
-        { title: "Cài đặt môi trường", duration: "25 phút" },
-      ],
-    },
-    {
-      section: "Component & Props",
-      lectures: 10,
-      duration: "4 giờ",
-      lessons: [
-        { title: "Tạo component đầu tiên", duration: "30 phút" },
-        { title: "Truyền props", duration: "35 phút", free: true },
-      ],
-    },
-  ],
-  reviews = [
-    {
-      id: 1,
-      name: "Trần B",
-      rating: 5,
-      date: "10/10/2025",
-      comment: "Khóa học rất hữu ích, giảng viên nhiệt tình!",
-    },
-    {
-      id: 2,
-      name: "Lê C",
-      rating: 4,
-      date: "12/10/2025",
-      comment: "Nội dung dễ hiểu, thực hành nhiều.",
-    },
-  ],
-  language = "Tiếng Việt",
-  lastUpdated = "10/2025",
-}) => {
+const CourseDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    if (id) {
+      fetchCourse();
+    }
+  }, [id]);
+
+  const fetchCourse = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/courses/${id}`);
+      if (!res.ok) throw new Error("Không tìm thấy khóa học");
+      const data = await res.json();
+      setCourse(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="loading" style={{ textAlign: 'center', padding: '5rem' }}>
+        <i className="fas fa-spinner fa-spin" style={{ fontSize: '3rem', color: 'var(--primary)' }}></i>
+        <p>Đang tải khóa học...</p>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="container" style={{ padding: '5rem 2rem', textAlign: 'center' }}>
+        <i className="fas fa-exclamation-circle" style={{ fontSize: '3rem', color: 'var(--danger)', marginBottom: '1rem' }}></i>
+        <h2>Không tìm thấy khóa học</h2>
+        <p>{error}</p>
+        <button onClick={() => navigate('/courses')} className="btn btn-primary">
+          <i className="fas fa-arrow-left"></i> Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
+
+  const {
+    title = "Khóa học",
+    description = "",
+    category = "",
+    rating = 0,
+    students = 0,
+    duration = "",
+    level = "",
+    instructor = "",
+    price = 0,
+    lectures = 0,
+    exercises = 0,
+    icon = "fas fa-book",
+    videoUrl = "",
+  } = course;
+
+  const embedUrl = getEmbedUrl(videoUrl);
+  
+  // Default values for demo
+  const instructorTitle = "Giảng viên chuyên nghiệp";
+  const instructorBio = "Giảng viên giàu kinh nghiệm trong lĩnh vực giáo dục.";
+  const certificate = true;
+  const fullDescription = description || "Khóa học này cung cấp kiến thức chuyên sâu giúp bạn phát triển kỹ năng.";
+  const learningOutcomes = [
+    "Nắm vững kiến thức cơ bản và nâng cao",
+    "Áp dụng thực tế vào công việc",
+    "Phát triển tư duy logic",
+  ];
+  const requirements = [
+    "Biết sử dụng máy tính cơ bản",
+    "Có tinh thần học hỏi",
+  ];
+  const curriculum = [];
+  const reviews = [];
+  const language = "Tiếng Việt";
+  const lastUpdated = "10/2025";
 
   return (
     <div className="course-detail-page">
@@ -115,11 +158,37 @@ const CourseDetail = ({
               </div>
             </div>
             <div className="course-detail-card">
-              <div className="course-card-preview">
-                <div className="course-preview-icon">
-                  <i className={icon}></i>
+              {/* Video Preview */}
+              {embedUrl ? (
+                <div className="course-video-preview" style={{ 
+                  position: 'relative', 
+                  paddingBottom: '56.25%', 
+                  height: 0, 
+                  overflow: 'hidden',
+                  borderRadius: '12px 12px 0 0'
+                }}>
+                  <iframe
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 'none'
+                    }}
+                    src={embedUrl}
+                    title={title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
                 </div>
-              </div>
+              ) : (
+                <div className="course-card-preview">
+                  <div className="course-preview-icon">
+                    <i className={icon}></i>
+                  </div>
+                </div>
+              )}
               <div className="course-card-body">
                 <div className="course-price-box">
                   <span className="course-price-main">
@@ -129,7 +198,7 @@ const CourseDetail = ({
                   <span className="course-discount">-33%</span>
                 </div>
                 <a
-                  href={`/payment/${defaultCourse.id}`}
+                  href={`/payment/${course._id}`}
                   className="btn btn-enroll"
                 >
                   <i className="fas fa-shopping-cart"></i> Đăng ký ngay
@@ -142,7 +211,7 @@ const CourseDetail = ({
                       giảng
                     </li>
                     <li>
-                      <i className="fas fa-tasks"></i> {assignments} bài tập
+                      <i className="fas fa-tasks"></i> {exercises} bài tập
                     </li>
                     <li>
                       <i className="fas fa-infinity"></i> Truy cập trọn đời
@@ -403,7 +472,7 @@ const CourseDetail = ({
                   <li>
                     <i className="fas fa-tasks"></i>{" "}
                     <div>
-                      <strong>Bài tập</strong> <span>{assignments} bài</span>
+                      <strong>Bài tập</strong> <span>{exercises} bài</span>
                     </div>
                   </li>
                   <li>

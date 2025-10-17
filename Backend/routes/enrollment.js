@@ -4,6 +4,7 @@ import {
   getMyEnrollments,
   checkEnrollment,
   unenrollCourse,
+  completeLesson,
 } from "../controllers/enrollment.controller.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -23,5 +24,8 @@ router.get("/check/:courseId", checkEnrollment);
 
 // Hủy đăng ký khóa học
 router.delete("/unenroll/:courseId", unenrollCourse);
+
+// Đánh dấu hoàn thành bài học
+router.patch("/complete-lesson", completeLesson);
 
 export default router;

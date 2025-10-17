@@ -17,52 +17,14 @@ import LearnCourse from "./pages/LearnCourse";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCourses from "./pages/admin/AdminCourses";
+import AdminCourseEditor from "./pages/admin/AdminCourseEditor";
 import "./App.css";
-
-const sampleCourses = [
-  {
-    id: 1,
-    icon: "fas fa-laptop-code",
-    category: "Công nghệ",
-    title: "React cho người mới",
-    description: "Bắt đầu hành trình học React từ cơ bản tới nâng cao.",
-    duration: "12 giờ",
-    students: 1240,
-    rating: 4.8,
-    price: 199000,
-  },
-  {
-    id: 2,
-    icon: "fas fa-briefcase",
-    category: "Kinh doanh",
-    title: "Quản trị doanh nghiệp",
-    description: "Kỹ năng quản trị và lãnh đạo hiệu quả.",
-    duration: "8 giờ",
-    students: 980,
-    rating: 4.6,
-    price: 149000,
-  },
-  {
-    id: 3,
-    icon: "fas fa-paint-brush",
-    category: "Sáng tạo",
-    title: "Thiết kế UI/UX",
-    description: "Thiết kế giao diện người dùng chuyên nghiệp.",
-    duration: "10 giờ",
-    students: 860,
-    rating: 4.7,
-    price: 179000,
-  },
-];
 
 export default function App() {
   return (
     <Router>
       <Layout>
         <Routes>
-<<<<<<< HEAD
-          <Route path="/" element={<Home popularCourses={sampleCourses} />} />
-=======
           {/* Trang chủ */}
           <Route path="/" element={<Home />} />
 
@@ -70,7 +32,6 @@ export default function App() {
           <Route path="/home" element={<Home />} />
 
           {/* Các trang khác */}
->>>>>>> 44066f8 (update)
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/courses" element={<Courses />} />
@@ -88,6 +49,7 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/courses" element={<AdminCourses />} />
+          <Route path="/admin/courses/:id/edit" element={<AdminCourseEditor />} />
         </Routes>
       </Layout>
     </Router>

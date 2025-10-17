@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 const MyCourses = () => {
   const [enrollments, setEnrollments] = useState([]);
@@ -20,7 +21,7 @@ const MyCourses = () => {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/enrollments/my-courses", {
+      const res = await fetch(`${API_URL}/enrollments/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

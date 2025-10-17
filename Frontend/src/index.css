@@ -18,6 +18,7 @@
 }
 
 .course-card {
+  position: relative;
   background: var(--card-bg);
   border-radius: 18px;
   box-shadow: 0 6px 24px rgba(102, 126, 234, 0.1);
@@ -35,6 +36,7 @@
   box-shadow: 0 12px 32px rgba(102, 126, 234, 0.18);
 }
 .course-image {
+  position: relative;
   width: 72px;
   height: 72px;
   background: linear-gradient(135deg, var(--primary-dark), var(--accent));
@@ -420,6 +422,14 @@ body {
   .feature-card:hover {
     transform: scale(1.04);
     box-shadow: 0 12px 32px rgba(102, 126, 234, 0.18);
+  }
+  .feature-card i {
+    font-size: 3.5rem;
+    background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
   }
   .feature-icon {
     width: 72px;
@@ -1637,6 +1647,7 @@ body {
   font-weight: 700;
   color: var(--text);
   margin-bottom: 1rem;
+  text-align: left;
 }
 
 .contact-info-desc {
@@ -1644,6 +1655,7 @@ body {
   color: var(--muted);
   line-height: 1.6;
   margin-bottom: 2.5rem;
+  text-align: left;
 }
 
 .contact-info-list {
@@ -1672,17 +1684,23 @@ body {
   flex-shrink: 0;
 }
 
+.contact-info-text {
+  text-align: left;
+}
+
 .contact-info-text h4 {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 0.4rem;
+  text-align: left;
 }
 
 .contact-info-text p {
   font-size: 1rem;
   color: var(--muted);
   line-height: 1.5;
+  text-align: left;
 }
 
 .contact-social h4 {
@@ -1690,11 +1708,13 @@ body {
   font-weight: 700;
   color: var(--text);
   margin-bottom: 1rem;
+  text-align: left;
 }
 
 .contact-social-links {
   display: flex;
   gap: 1rem;
+  justify-content: flex-start;
 }
 
 .contact-social-link {

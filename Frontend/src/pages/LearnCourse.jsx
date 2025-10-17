@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 const LearnCourse = () => {
   const { id } = useParams();
@@ -8,10 +9,19 @@ const LearnCourse = () => {
   const [enrollment, setEnrollment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [completedLessons, setCompletedLessons] = useState([]);
+
+  // Thêm ref cho video overlay
+  const mainVideoRef = useRef(null);
+  const [videoOverlay, setVideoOverlay] = useState(false);
 
   useEffect(() => {
     checkEnrollmentAndFetchCourse();
   }, [id]);
+
+  useEffect(() => {
+    if (enrollment?.completedLessons) setCompletedLessons(enrollment.completedLessons);
+  }, [enrollment]);
 
   const checkEnrollmentAndFetchCourse = async () => {
     try {
@@ -26,7 +36,7 @@ const LearnCourse = () => {
 
       // Kiểm tra đăng ký
       const enrollRes = await fetch(
-        `http://localhost:5000/api/enrollments/check/${id}`,
+        `${API_URL}/enrollments/check/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -42,14 +52,14 @@ const LearnCourse = () => {
       }
 
       // Lấy thông tin khóa học
-      const courseRes = await fetch(`http://localhost:5000/api/courses/${id}`);
+      const courseRes = await fetch(`${API_URL}/courses/${id}`);
       if (!courseRes.ok) throw new Error("Không tìm thấy khóa học");
       const courseData = await courseRes.json();
       setCourse(courseData);
 
       // Lấy thông tin enrollment để hiển thị progress
       const myCoursesRes = await fetch(
-        "http://localhost:5000/api/enrollments/my-courses",
+        `${API_URL}/enrollments/my-courses`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -67,6 +77,54 @@ const LearnCourse = () => {
       setLoading(false);
     }
   };
+
+  // Gọi API khi xem hết video bài học
+  const handleLessonEnded = async (lessonId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await fetch(`${API_URL}/enrollments/complete-lesson`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ courseId: course._id, lessonId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCompletedLessons(data.completedLessons);
+      }
+    } catch {}
+  };
+
+  // Helper: Overlay che seekbar cho iframe (YouTube/Vimeo)
+  const renderVideoWithNoSeek = (src, title = "Video khóa học") => (
+    <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, background: "#000", borderRadius: "8px" }}>
+      <iframe
+        ref={mainVideoRef}
+        src={src}
+        allowFullScreen={true}
+        style={{ position: "absolute", width: "100%", height: "100%", left: 0, top: 0, border: 0, borderRadius: "8px" }}
+        title={title}
+      />
+      {/* Overlay che seekbar (dưới cùng) */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          bottom: 0,
+          width: "100%",
+          height: "18%",
+          background: "rgba(0,0,0,0.01)",
+          zIndex: 10,
+          cursor: "not-allowed",
+        }}
+        onClick={e => e.preventDefault()}
+        onMouseDown={e => e.preventDefault()}
+      ></div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -172,6 +230,87 @@ const LearnCourse = () => {
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "2rem" }}>
             {/* Video/Content Area */}
             <div>
+              {/* Video player nếu có videoUrl */}
+              {course.videoUrl && (
+                renderVideoWithNoSeek(
+                  (() => {
+                    if (course.videoUrl.includes("youtube.com") || course.videoUrl.includes("youtu.be")) {
+                      const videoId = course.videoUrl.includes("youtube.com")
+                        ? course.videoUrl.split("v=")[1]?.split("&")[0]
+                        : course.videoUrl.split("youtu.be/")[1]?.split("?")[0];
+                      return videoId ? `https://www.youtube.com/embed/${videoId}` : course.videoUrl;
+                    }
+                    if (course.videoUrl.includes("vimeo.com")) {
+                      const videoId = course.videoUrl.split("vimeo.com/")[1]?.split("?")[0];
+                      return videoId ? `https://player.vimeo.com/video/${videoId}` : course.videoUrl;
+                    }
+                    return course.videoUrl;
+                  })(),
+                  "Video khóa học"
+                )
+              )}
+
+              {/* Danh sách bài học thực tế */}
+              <h2 style={{ marginBottom: "1rem" }}>Nội dung khóa học ({course.lessonCount || (course.lessons?.length || 0)} bài học, {course.videoCount || (course.lessons?.filter(l=>l.videoUrl).length || 0)} video, {course.quizCount || (course.quizzes?.length || 0)} bài kiểm tra)</h2>
+              <div style={{ marginBottom: "2rem" }}>
+                {course.lessons && course.lessons.length > 0 ? (
+                  course.lessons.map((lesson, idx) => (
+                    <div key={idx} style={{ background: "#f8f9fb", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", marginBottom: "0.5rem" }}>
+                        <i className="fas fa-play-circle" style={{ color: "var(--primary)" }}></i>
+                        <strong>Bài {idx + 1}: {lesson.title}</strong>
+                        {lesson.duration && <span style={{ color: "#64748b", fontSize: "0.95em" }}>({lesson.duration})</span>}
+                        {/* Dấu tích xanh nếu đã hoàn thành */}
+                        {completedLessons?.includes?.(lesson._id) && (
+                          <span style={{ color: "#22c55e", fontWeight: 600 }}><i className="fas fa-check-circle"></i></span>
+                        )}
+                      </div>
+                      {lesson.videoUrl && (
+                        <VideoWithEnded
+                          src={(() => {
+                            if (lesson.videoUrl.includes("youtube.com") || lesson.videoUrl.includes("youtu.be")) {
+                              const videoId = lesson.videoUrl.includes("youtube.com")
+                                ? lesson.videoUrl.split("v=")[1]?.split("&")[0]
+                                : lesson.videoUrl.split("youtu.be/")[1]?.split("?")[0];
+                              return videoId ? `https://www.youtube.com/embed/${videoId}` : lesson.videoUrl;
+                            }
+                            if (lesson.videoUrl.includes("vimeo.com")) {
+                              const videoId = lesson.videoUrl.split("vimeo.com/")[1]?.split("?")[0];
+                              return videoId ? `https://player.vimeo.com/video/${videoId}` : lesson.videoUrl;
+                            }
+                            return lesson.videoUrl;
+                          })()}
+                          title={`Video bài học ${idx + 1}`}
+                          onEnded={() => handleLessonEnded(lesson._id)}
+                        />
+                      )}
+                      {lesson.description && <div style={{ color: "#334155", fontSize: "0.98em" }}>{lesson.description}</div>}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ color: "#64748b" }}>Chưa có bài học nào.</div>
+                )}
+              </div>
+
+              {/* Danh sách bài kiểm tra */}
+              <h2 style={{ marginBottom: "1rem" }}>Bài kiểm tra ({course.quizCount || (course.quizzes?.length || 0)})</h2>
+              <div style={{ marginBottom: "2rem" }}>
+                {course.quizzes && course.quizzes.length > 0 ? (
+                  course.quizzes.map((quiz, idx) => (
+                    <div key={idx} style={{ background: "#fefce8", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", marginBottom: "0.5rem" }}>
+                        <i className="fas fa-question-circle" style={{ color: "#f59e0b" }}></i>
+                        <strong>Bài kiểm tra {idx + 1}: {quiz.title}</strong>
+                        <span style={{ color: "#92400e", fontSize: "0.95em" }}>({quiz.questions?.length || 0} câu hỏi)</span>
+                      </div>
+                      {quiz.description && <div style={{ color: "#92400e", fontSize: "0.98em" }}>{quiz.description}</div>}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ color: "#64748b" }}>Chưa có bài kiểm tra nào.</div>
+                )}
+              </div>
+
               <div
                 className="course-form"
                 style={{
@@ -181,26 +320,6 @@ const LearnCourse = () => {
                   marginBottom: "2rem",
                 }}
               >
-                <div
-                  style={{
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    borderRadius: "8px",
-                    padding: "3rem",
-                    textAlign: "center",
-                    color: "white",
-                    marginBottom: "2rem",
-                  }}
-                >
-                  <i
-                    className="fas fa-play-circle"
-                    style={{ fontSize: "4rem", marginBottom: "1rem" }}
-                  ></i>
-                  <h3>Video bài giảng</h3>
-                  <p style={{ opacity: 0.9 }}>
-                    Tính năng video đang được phát triển
-                  </p>
-                </div>
-
                 <h2 style={{ marginBottom: "1rem" }}>Nội dung khóa học</h2>
                 <p style={{ color: "var(--text)", lineHeight: "1.6" }}>
                   {course.description}
@@ -279,84 +398,78 @@ const LearnCourse = () => {
                 <h3 style={{ marginBottom: "1rem" }}>
                   <i className="fas fa-list"></i> Nội dung bài học
                 </h3>
-                <p style={{ color: "var(--muted)", marginBottom: "1.5rem" }}>
-                  Danh sách các bài học sẽ được cập nhật sớm
-                </p>
-
-                <div style={{ marginBottom: "1rem" }}>
-                  <div
-                    style={{
-                      padding: "1rem",
-                      background: "#f8f9fb",
-                      borderRadius: "8px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span>
-                        <i className="fas fa-play-circle" style={{ color: "var(--primary)" }}></i>{" "}
-                        Bài 1: Giới thiệu
-                      </span>
-                      <span style={{ fontSize: "0.9rem", color: "var(--muted)" }}>
-                        15 phút
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      padding: "1rem",
-                      background: "#f8f9fb",
-                      borderRadius: "8px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span>
-                        <i className="fas fa-lock" style={{ color: "var(--muted)" }}></i> Bài 2:
-                        Cài đặt
-                      </span>
-                      <span style={{ fontSize: "0.9rem", color: "var(--muted)" }}>
-                        20 phút
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      padding: "1rem",
-                      background: "#f8f9fb",
-                      borderRadius: "8px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span>
-                        <i className="fas fa-lock" style={{ color: "var(--muted)" }}></i> Bài 3:
-                        Thực hành
-                      </span>
-                      <span style={{ fontSize: "0.9rem", color: "var(--muted)" }}>
-                        30 phút
-                      </span>
-                    </div>
-                  </div>
+                {/* Danh sách bài học thực tế */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  {course.lessons && course.lessons.length > 0 ? (
+                    course.lessons.map((lesson, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "1rem",
+                          background: "#f8f9fb",
+                          borderRadius: "8px",
+                          marginBottom: "0.5rem",
+                          border: "2px solid #e0e7ef",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <i className="fas fa-play-circle" style={{ color: "var(--primary)" }}></i>
+                          <span style={{ fontWeight: 600 }}>Bài {idx + 1}: {lesson.title}</span>
+                          {lesson.duration && <span style={{ color: "#64748b", fontSize: "0.95em" }}>({lesson.duration})</span>}
+                        </span>
+                        {/* Trạng thái hoàn thành (nếu có) */}
+                        {enrollment?.completedLessons?.includes?.(lesson._id) ? (
+                          <span style={{ color: "#22c55e", fontWeight: 600 }}><i className="fas fa-check-circle"></i> Đã học</span>
+                        ) : (
+                          <span style={{ color: "#64748b" }}><i className="fas fa-circle"></i></span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: "#64748b" }}>Chưa có bài học nào.</div>
+                  )}
                 </div>
-
+                {/* Danh sách bài tập (quizzes) */}
+                <h4 style={{ marginBottom: "0.7rem", marginTop: "1.5rem" }}>
+                  <i className="fas fa-question-circle" style={{ color: "#f59e0b" }}></i> Bài tập
+                </h4>
+                <div>
+                  {course.quizzes && course.quizzes.length > 0 ? (
+                    course.quizzes.map((quiz, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "1rem",
+                          background: "#fefce8",
+                          borderRadius: "8px",
+                          marginBottom: "0.5rem",
+                          border: "2px solid #fde68a",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <i className="fas fa-question-circle" style={{ color: "#f59e0b" }}></i>
+                          <span style={{ fontWeight: 600 }}>Quiz {idx + 1}: {quiz.title}</span>
+                          <span style={{ color: "#92400e", fontSize: "0.95em" }}>({quiz.questions?.length || 0} câu hỏi)</span>
+                        </span>
+                        {/* Trạng thái hoàn thành (nếu có) */}
+                        {enrollment?.completedQuizzes?.includes?.(quiz._id) ? (
+                          <span style={{ color: "#22c55e", fontWeight: 600 }}><i className="fas fa-check-circle"></i> Đã làm</span>
+                        ) : (
+                          <span style={{ color: "#64748b" }}><i className="fas fa-circle"></i></span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: "#64748b" }}>Chưa có bài tập nào.</div>
+                  )}
+                </div>
+                {/* Nút hoàn thành hoặc thông báo */}
                 {enrollment?.completed ? (
                   <div
                     className="alert"
@@ -384,6 +497,63 @@ const LearnCourse = () => {
           </div>
         </div>
       </section>
+    </div>
+  );
+};
+
+// Component video có sự kiện ended (dùng cho YouTube/Vimeo embed)
+const VideoWithEnded = ({ src, title, onEnded }) => {
+  const iframeRef = useRef();
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    // Chỉ hỗ trợ YouTube
+    if (src.includes("youtube.com") || src.includes("youtu.be")) {
+      // Inject YouTube API
+      const onYouTubeIframeAPIReady = () => {
+        const player = new window.YT.Player(iframe, {
+          events: {
+            onStateChange: (event) => {
+              if (event.data === 0) onEnded && onEnded(); // 0 = ended
+            },
+          },
+        });
+      };
+      if (!window.YT) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+        document.body.appendChild(tag);
+      } else {
+        onYouTubeIframeAPIReady();
+      }
+    }
+    // TODO: Vimeo support nếu cần
+  }, [src, onEnded]);
+  return (
+    <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, background: "#000", borderRadius: "8px" }}>
+      <iframe
+        ref={iframeRef}
+        src={src}
+        allowFullScreen={true}
+        style={{ position: "absolute", width: "100%", height: "100%", left: 0, top: 0, border: 0, borderRadius: "8px" }}
+        title={title}
+      />
+      {/* Overlay che seekbar (dưới cùng) */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          bottom: 0,
+          width: "100%",
+          height: "18%",
+          background: "rgba(0,0,0,0.01)",
+          zIndex: 10,
+          cursor: "not-allowed",
+        }}
+        onClick={e => e.preventDefault()}
+        onMouseDown={e => e.preventDefault()}
+      ></div>
     </div>
   );
 };

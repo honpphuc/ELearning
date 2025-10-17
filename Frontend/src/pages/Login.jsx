@@ -1,12 +1,13 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
-const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
+const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-<<<<<<< HEAD
-  const togglePassword = () => {
-    setShowPassword(!showPassword);
-=======
   const togglePassword = () => setShowPassword(!showPassword);
 
   const handleChange = (e) => {
@@ -18,33 +19,39 @@ const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
     setMessage({ type: "", text: "" });
 
     try {
-      // Gửi request đến backend
-      const res = await axios.post("http://localhost:5000/api/auth/login", formData);
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // ✅ Nếu thành công
-      setMessage({ type: "success", text: "Đăng nhập thành công!" });
-      console.log("Login success:", res.data);
+      const data = await res.json();
 
-      // Lưu token vào localStorage
-      // ✅ Lưu token & user vào localStorage
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (!res.ok) {
+        throw new Error(data.error || "Đăng nhập thất bại!");
+      }
 
-      // 🔔 Báo cho Layout biết user vừa đăng nhập để cập nhật menu ngay
+      // Lưu token & user vào localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Báo cho Layout biết user vừa đăng nhập
       window.dispatchEvent(new Event("userLogin"));
 
-      // ✅ Điều hướng sang trang home sau 1 giây
+      setMessage({ type: "success", text: "Đăng nhập thành công!" });
+
+      // Điều hướng sang trang home sau 1 giây
       setTimeout(() => {
         navigate("/home");
       }, 1000);
     } catch (err) {
-      console.error("Login error:", err.response?.data);
       setMessage({
         type: "error",
-        text: err.response?.data?.error || "Đăng nhập thất bại!",
+        text: err.message || "Đăng nhập thất bại!",
       });
     }
->>>>>>> 44066f8 (update)
   };
 
   return (
@@ -59,21 +66,20 @@ const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
                 <p>Nhập thông tin tài khoản của bạn</p>
               </div>
 
-              {errorMessage && (
+              {message.type === "error" && (
                 <div className="alert alert-error">
                   <i className="fas fa-exclamation-circle"></i>
-                  {errorMessage}
+                  {message.text}
                 </div>
               )}
-              {successMessage && (
+              {message.type === "success" && (
                 <div className="alert alert-success">
                   <i className="fas fa-check-circle"></i>
-                  {successMessage}
+                  {message.text}
                 </div>
               )}
 
-              <form method="POST" action="/login" noValidate>
-                <input type="hidden" name="_csrf" value={csrfToken} />
+              <form onSubmit={handleSubmit} noValidate>
 
                 <div className="form-group">
                   <label htmlFor="email">
@@ -87,6 +93,8 @@ const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
                     required
                     autoComplete="email"
                     placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </div>
 
@@ -103,6 +111,8 @@ const Login = ({ csrfToken = "", errorMessage = "", successMessage = "" }) => {
                       required
                       autoComplete="current-password"
                       placeholder="••••••••"
+                      value={formData.password}
+                      onChange={handleChange}
                     />
                     <button
                       type="button"

@@ -143,7 +143,7 @@ const About = () => (
             <div className="team-avatar">
               <i className="fas fa-user"></i>
             </div>
-            <h4>Nguyễn Văn A</h4>
+            <h4>Đàm Gia Phú</h4>
             <p className="team-role">CEO & Founder</p>
             <p className="team-bio">
               10+ năm kinh nghiệm trong lĩnh vực giáo dục và công nghệ
@@ -153,7 +153,7 @@ const About = () => (
             <div className="team-avatar">
               <i className="fas fa-user"></i>
             </div>
-            <h4>Trần Thị B</h4>
+            <h4>Lê Hồng Phúc</h4>
             <p className="team-role">CTO</p>
             <p className="team-bio">
               Chuyên gia về AI và Machine Learning trong giáo dục
@@ -163,7 +163,7 @@ const About = () => (
             <div className="team-avatar">
               <i className="fas fa-user"></i>
             </div>
-            <h4>Lê Văn C</h4>
+            <h4>Phan Thị Gia Hân</h4>
             <p className="team-role">Head of Content</p>
             <p className="team-bio">
               Chuyên gia phát triển nội dung học tập chất lượng cao
@@ -173,7 +173,7 @@ const About = () => (
             <div className="team-avatar">
               <i className="fas fa-user"></i>
             </div>
-            <h4>Phạm Thị D</h4>
+            <h4>Đỗ Thanh Tùng</h4>
             <p className="team-role">Head of Marketing</p>
             <p className="team-bio">
               8 năm kinh nghiệm trong marketing và phát triển thương hiệu
