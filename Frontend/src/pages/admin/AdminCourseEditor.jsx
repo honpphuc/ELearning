@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { API_URL } from "../../config";
+import { getAdminCourseById, updateCourseContent } from "../apiService";
 
 const AdminCourseEditor = () => {
   const { id } = useParams();
@@ -25,12 +25,7 @@ const AdminCourseEditor = () => {
   const fetchCourse = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/admin/courses/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Không tìm thấy khóa học");
-      const data = await res.json();
+      const data = await getAdminCourseById(id);
       setCourse(data);
       setLessons(data.lessons || []);
       setQuizzes(data.quizzes || []);
@@ -75,13 +70,7 @@ const AdminCourseEditor = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/admin/courses/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ lessons, quizzes }),
-      });
-      if (!res.ok) throw new Error("Lưu thất bại");
+      await updateCourseContent(id, { lessons, quizzes });
       alert("✅ Lưu thành công!");
       fetchCourse();
     } catch (err) {

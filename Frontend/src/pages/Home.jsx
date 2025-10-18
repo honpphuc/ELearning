@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_URL } from "../config";
+import { getPopularCourses } from "./apiService";
 
 const Home = () => {
   const [popularCourses, setPopularCourses] = useState([]);
@@ -40,11 +40,8 @@ const Home = () => {
   const fetchPopularCourses = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/courses/popular`);
-      if (res.ok) {
-        const data = await res.json();
-        setPopularCourses(data);
-      }
+      const data = await getPopularCourses();
+      setPopularCourses(data);
     } catch (err) {
       console.error("Lỗi tải khóa học phổ biến:", err);
     } finally {

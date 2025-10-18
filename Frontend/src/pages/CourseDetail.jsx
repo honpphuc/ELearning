@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { API_URL } from "../config";
+import { getCourseById } from "./apiService";
 
 // Helper function để convert YouTube URL sang embed URL
 const getEmbedUrl = (url) => {
@@ -44,9 +44,7 @@ const CourseDetail = () => {
   const fetchCourse = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/courses/${id}`);
-      if (!res.ok) throw new Error("Không tìm thấy khóa học");
-      const data = await res.json();
+      const data = await getCourseById(id);
       setCourse(data);
     } catch (err) {
       setError(err.message);

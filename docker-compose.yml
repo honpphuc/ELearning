@@ -1,0 +1,70 @@
+services:
+  mongo1:
+    image: mongo:latest
+    container_name: mongo1
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    command: --replSet rs0
+    volumes:
+      - mongo1_data:/data/db
+
+  mongo2:
+    image: mongo:latest
+    container_name: mongo2
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    command: --replSet rs0
+    volumes:
+      - mongo2_data:/data/db
+
+  mongo3:
+    image: mongo:latest
+    container_name: mongo3
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    command: --replSet rs0
+    volumes:
+      - mongo3_data:/data/db
+
+  backend-user:
+    build: ./Backend
+    container_name: backend-user
+    restart: always
+    ports:
+      - "5001:5000"
+    environment:
+      MONGO_URL: mongodb://root:example@mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+
+  backend-course:
+    build: ./Backend
+    container_name: backend-course
+    restart: always
+    ports:
+      - "5002:5000"
+    environment:
+      MONGO_URL: mongodb://root:example@mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+
+volumes:
+  mongo1_data:
+    driver: local
+  mongo2_data:
+    driver: local
+  mongo3_data:
+    driver: local
